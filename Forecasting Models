@@ -1,0 +1,508 @@
+graphics.off() # This closes all of R's graphics windows.
+rm(list=ls())
+library(rwalkr)
+library(forecast)
+library(feasts)
+library(tsibbledata)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tsibble)
+library(fpp3)
+library(fable)
+library(sugrrants)
+#====================Time Series Plot =====================#
+# Provides API using Socrata to Melbourne pedestrian sensor locations.
+sensor <- pull_sensor(app_token = NULL)
+# Pedestrian data across 5 sensors
+walk_2018 <- melb_walk_fast(year = 2018,
+sensor = c('Flinders Street Station Underpass',"Princes Bridge",
+"Bourke Street Mall (North)","Southern Cross Station",
+"Southbank"),
+na.rm = FALSE, app_token = NULL)
+summary(is.na(walk_2018)) # 702 missing values
+walk_2019 <- melb_walk_fast(year = 2019,
+sensor = c('Flinders Street Station Underpass',"Princes Bridge",
+"Bourke Street Mall (North)","Southern Cross Station",
+"Southbank"),
+na.rm = FALSE, app_token = NULL)
+# Convert to tsibble
+ts_2018 <- as_tsibble(walk_2018, key=Sensor, index = Date_Time)
+ts_2019 <- as_tsibble(walk_2019, key=Sensor, index = Date_Time)
+# Time Series Plots
+ts_2018 %>% gg_season(Count, period="week") + theme(legend.position = "none") + ggtitle("Seasonal plot: Pedestrian Counts Weekly Patterns")
+ts_2018 %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +ggtitle("Pedestrian Counts Daily Patterns") +
+facet_grid(Sensor ~ .)
+#ts_2019 %>% gg_season(Count, period="day") + theme(legend.position = "none") + ggtitle("Seasonal plot: Pedestrian Counts Daily Patterns")
+ts_2019 %>% gg_season(Count, period="week", labels = "right") + theme(legend.position = "none") + ggtitle("Pedestrian Counts Weekly Patterns")
+ts_2019 %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +
+ggtitle("Pedestrian Counts Daily Patterns") +
+facet_grid(Sensor ~ .)
+holiday_aus(2018, state = "VIC")
+holiday_aus(2019, state = "VIC")
+#=========Calender view plot to view anomalies in training data=========#
+# Princes-Bridege #
+ts_2018 %>% filter(month(Date, label = TRUE)=="Jan" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Feb" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Mar" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Apr" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="May" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Jun" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Jul" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Aug" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Sep" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Oct" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Nov" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+# Flinders Street Station Underpass #
+ts_2018 %>% filter(month(Date, label = TRUE)=="Jan" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Feb" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Mar" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Apr" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="May" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Jun" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Jul" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Aug" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Sep" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+#================== Data preprocessing ==================#
+# Select data from May to August (12 weeks) by filtering out anomalies
+# ---------- Flinders Station -----------------------
+train_flinders <- ts_2018 %>% filter(Sensor =='Flinders Street Station Underpass' &
+Date_Time>=as.POSIXlt("2018-05-07 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-08-05 23:00", tz="Australia/Melbourne"))
+drop_rows <- train_flinders %>% filter(Date_Time>=as.POSIXlt("2018-06-11 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-06-17 23:00", tz="Australia/Melbourne"))
+train_flinders <- setdiff(train_flinders,drop_rows)
+train_flinders %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +
+ggtitle("Pedestrian Counts Daily Patterns")
+# Testing data for cross validation
+test_flinders <- ts_2018 %>% filter(Sensor =='Flinders Street Station Underpass' &
+Date_Time>=as.POSIXlt("2018-08-27 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-09-30 23:00", tz="Australia/Melbourne"))
+test_flinders %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +
+ggtitle("Pedestrian Counts Daily Patterns")
+# test_flinders <- ts_2018 %>% filter(Sensor =='Flinders Street Station Underpass' &
+# Date_Time>=as.POSIXlt("2018-08-27 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2018-09-02 23:00", tz="Australia/Melbourne"))
+# This is the test data used for cross validation
+flinders_18 <- rbind(train_flinders, test_flinders)
+# ------------- Princes Bridge ------------------------
+train_pb <- ts_2018 %>% filter(Sensor =='Princes Bridge' &
+Date_Time>=as.POSIXlt("2018-05-07 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-08-19 23:00", tz="Australia/Melbourne"))
+drop_rows <- train_pb %>% filter((Date_Time>=as.POSIXlt("2018-06-04 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-06-17 23:00", tz="Australia/Melbourne"))|
+(Date_Time>=as.POSIXlt("2018-07-09 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-07-15 23:00", tz="Australia/Melbourne")))
+train_pb <- setdiff(train_pb,drop_rows)
+train_pb %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +
+ggtitle("Pedestrian Counts Daily Patterns")
+test_pb <- ts_2018 %>% filter(Sensor =='Princes Bridge' &
+Date_Time>=as.POSIXlt("2018-08-20 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-09-23 23:00", tz="Australia/Melbourne"))
+pb_18 <- rbind(train_pb, test_pb)
+#==================Forecasting: Model Fitting ==================#
+##### Flinders Station #####
+# 1. dynamic harmonic regression #
+train_flinders_msts <- msts(train_flinders$Count, seasonal.periods=c(24,24*7))
+#---------------------------------------------------------------------------
+# What is K here? how to choose k?
+plots <- list()
+for (i in seq(12)) {
+fit <- auto.arima(train_flinders_msts, xreg = fourier(train_flinders_msts, K = c(i,i)), lambda = 0,
+seasonal = FALSE)
+plots[[i]] <- autoplot(forecast(fit,
+xreg=fourier(train_flinders_msts, K=c(i,i), h=24*7))) +
+xlab(paste("K=",i," AICC=",round(fit[["aicc"]],2))) +
+ylab("")
+}
+gridExtra::grid.arrange(
+plots[[1]],plots[[2]],plots[[3]],
+plots[[4]],plots[[5]],plots[[6]],
+plots[[7]], plots[[8]], plots[[9]],
+plots[[10]], plots[[11]], plots[[12]], nrow=6)
+#---------------------------------------------------------------------------
+# automatic model found by auto.arima
+fit <- auto.arima(train_flinders_msts, seasonal=FALSE, lambda = 0,
+xreg=fourier(train_flinders_msts, K=c(12,12)))
+fit
+fcast <- fit %>%
+forecast(xreg=fourier(train_flinders_msts, K=c(12,12), h=24*7))
+fcast$mean
+fcast%>%
+autoplot() +
+ylab("Counts") + xlab("Date_Time")
+checkresiduals(fcast)
+#accuracy(fcast, msts(test_flinders[1:168, 5], seasonal.periods=c(24,24*7), start=c(13,1)))
+# Overfitting
+fit1 <- Arima(train_flinders_msts, xreg = fourier(train_flinders_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(2,1,4) )
+fit2 <- Arima(train_flinders_msts, xreg = fourier(train_flinders_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(2,1,6) )
+fit3 <- Arima(train_flinders_msts, xreg = fourier(train_flinders_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(3,1,5) )
+fit4 <- Arima(train_flinders_msts, xreg = fourier(train_flinders_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(1,1,5) )
+aic <- AIC(fit, fit1, fit2, fit3, fit4)
+bic <- BIC(fit, fit1, fit2, fit3, fit4)
+AICc <- rbind(fit["aicc"], fit1["aicc"], fit2["aicc"], fit3["aicc"], fit4["aicc"])
+aic_bic <- cbind(aic,AICc,bic)
+aic_bic <- aic_bic[, c(1,2,3,5)]
+aic_bic # fit 2 gives smallest aic and bic
+# Can use cross validation by rolling a fixed window to compare the performance
+#--------------------------------------------------------------------------
+# ---- fit -----------
+# Test
+y <- msts(flinders_18$Count, seasonal.periods=c(24,24*7))
+h <- 168
+fcmat <- matrix(0, nrow=5, ncol=h)
+accuracy <- matrix(0, nrow=5, ncol=7)
+colnames(accuracy) <- c("ME","RMSE","MAE","MPE","MAPE","ACF1","Theil's U")
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+xreg <- fourier(x, K=c(12,12))
+fit <- Arima(x, xreg = xreg, lambda = 0, seasonal = c(0,0,0), order = c(2, 1, 5))
+fcmat[i,] <- forecast(fit, xreg = fourier(x, K=c(12,12), h=h))$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+accuracy
+colSums (accuracy, na.rm = FALSE, dims = 1)/5
+# ---- fit2 -----------
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+xreg <- fourier(x, K=c(12,12))
+fit <- Arima(x, xreg = xreg, lambda = 0, seasonal = c(0,0,0), order = c(2, 1, 6))
+fcmat[i,] <- forecast(fit, xreg = fourier(x, K=c(12,12), h=h))$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+accuracy
+colSums (accuracy, na.rm = FALSE, dims = 1)/5
+# 2. tbats #
+tbats_flinders <- tbats(train_flinders_msts)
+# tbats.components(tbats)
+fc_tbats <- forecast(tbats_flinders, h = 24*7)
+autoplot(fc_tbats) +
+xlab('Date') + ylab('Counts')
+# accuracy(fc_tbats, window(y, start=c(13,1), end=c(13,168)))
+# tscv
+y <- msts(flinders_18$Count, seasonal.periods=c(24,24*7))
+h <- 168
+fcmat <- matrix(0, nrow=5, ncol=h)
+accuracy <- matrix(0, nrow=5, ncol=7)
+colnames(accuracy) <- c("ME","RMSE","MAE","MPE","MAPE","ACF1","Theil's U")
+# cross validation without re-estimation
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+fit <- tbats(x, model=tbats)
+fcmat[i,] <- forecast(fit, h=h)$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+# cross validation with re-estimation
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+fit <- tbats(x)
+fcmat[i,] <- forecast(fit, h=h)$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+accuracy
+colSums (accuracy, na.rm = FALSE, dims = 1)/5
+# Forecasting Errors
+Date_Time = test_flinders %>% filter(Date_Time>=as.POSIXlt("2018-08-27 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-09-02 23:00", tz="Australia/Melbourne"))
+error_flinders <- window(y, start=c(13,1), end=c(13,168)) - fc_tbats$mean
+error_flindres <- error_flinders %>% as_tibble() %>% mutate(Date_Time = Date_Time$Date_Time)
+error_flindres <- error_flindres %>% as_tsibble(index = Date_Time)
+error_flindres %>% ggplot() +
+geom_line(aes(x = Date_Time, y = x)) +
+ggtitle(label = "Forecast Error of Trained Model")
+##### Princes Bridge #####
+# 1. dynamic harmonic regression #
+train_pb_msts <- msts(train_pb$Count, seasonal.periods=c(24,24*7))
+#---------------------------------------------------------------------------
+# What is K here? how to choose k?
+plots <- list()
+for (i in seq(12)) {
+fit <- auto.arima(train_pb_msts, xreg = fourier(train_pb_msts, K = c(i,i)), lambda = 0,
+seasonal = FALSE)
+plots[[i]] <- autoplot(forecast(fit,xreg=fourier(train_pb_msts, K=c(i,i), h=24*7))) +
+xlab(paste("K=",i," AICC=",round(fit[["aicc"]],2))) +
+ylab("")
+}
+gridExtra::grid.arrange(
+plots[[1]],plots[[2]],plots[[3]],
+plots[[4]],plots[[5]],plots[[6]],
+plots[[7]], plots[[8]], plots[[9]],
+plots[[10]],plots[[11]], plots[[12]], nrow=6)
+#---------------------------------------------------------------------------
+# automatic model found by auto.arima
+fit_pb <- auto.arima(train_pb_msts, seasonal=FALSE, lambda = 0,
+xreg=fourier(train_flinders_msts, K=c(12,12)))
+fit_pb
+fcast_pb <- fit_pb %>%
+forecast(xreg=fourier(train_pb_msts, K=c(12,12), h=24*7))
+fcast_pb %>%
+autoplot() +
+ylab("Counts") + xlab("Date_Time")
+checkresiduals(fcast_pb)
+# Overfitting
+fit_pb1 <- Arima(train_pb_msts, xreg = fourier(train_pb_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(4,1,3) )
+fit_pb2 <- Arima(train_pb_msts, xreg = fourier(train_pb_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(4,1,1) )
+fit_pb3 <- Arima(train_pb_msts, xreg = fourier(train_pb_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(5,1,2) )
+fit_pb4 <- Arima(train_pb_msts, xreg = fourier(train_pb_msts, K=c(12,12)),
+lambda = 0, seasonal = c(0,0,0), order = c(3,1,2) )
+aic <- AIC(fit_pb, fit_pb1, fit_pb2, fit_pb3, fit_pb4)
+bic <- BIC(fit_pb, fit_pb1, fit_pb2, fit_pb3, fit_pb4)
+AICc <- rbind(fit_pb["aicc"], fit_pb1["aicc"], fit_pb2["aicc"], fit_pb3["aicc"], fit_pb4["aicc"])
+aic_bic <- cbind(aic,AICc,bic)
+aic_bic <- aic_bic[, c(1,2,3,5)]
+aic_bic # fit_pb1 gives the lowest aic and bic
+fc_pb1 <- fit_pb1 %>%
+forecast(xreg=fourier(train_pb_msts, K=c(12,12), h =24*7))
+fc_pb1%>%
+autoplot() +
+ylab("Counts") + xlab("Date_Time")
+checkresiduals(fc_pb1)
+# Compare accuracy
+# accuracy(fcast_pb, test_pb$Count)
+# accuracy(fc_pb1, test_pb$Count)
+# Can use cross validation by rolling a fixed window to compare the performance
+# ---- fit_pb -----------
+# Test
+y <- msts(pb_18$Count, seasonal.periods=c(24,24*7))
+h <- 168
+fcmat <- matrix(0, nrow=5, ncol=h)
+accuracy <- matrix(0, nrow=5, ncol=7)
+colnames(accuracy) <- c("ME","RMSE","MAE","MPE","MAPE","ACF1","Theil's U")
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+xreg <- fourier(x, K=c(12,12))
+fit <- Arima(x, xreg = xreg, lambda = 0, seasonal = c(0,0,0), order = c(4, 1, 2))
+fcmat[i,] <- forecast(fit, xreg = fourier(x, K=c(12,12), h=h))$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+accuracy
+colSums (accuracy, na.rm = FALSE, dims = 1)/5
+# ---- fit_pb1 -----------
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+xreg <- fourier(x, K=c(12,12))
+fit <- Arima(x, xreg = xreg, lambda = 0, seasonal = c(0,0,0), order = c(4, 1, 3))
+fcmat[i,] <- forecast(fit, xreg = fourier(x, K=c(12,12), h=h))$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+accuracy
+colSums (accuracy, na.rm = FALSE, dims = 1)/5
+# 2. tbats #
+tbats <- tbats(train_pb_msts)
+# tbats.components(tbats)
+fc_tbats <- forecast(tbats, h = 24*7)
+autoplot(fc_tbats) +
+xlab('Date') + ylab('Counts')
+# accuracy(fc_tbats, test_pb$Count)
+# tscv
+y <- msts(pb_18$Count, seasonal.periods=c(24,24*7))
+h <- 168
+fcmat <- matrix(0, nrow=5, ncol=h)
+accuracy <- matrix(0, nrow=5, ncol=7)
+colnames(accuracy) <- c("ME","RMSE","MAE","MPE","MAPE","ACF1","Theil's U")
+# cross validation without re-estimation
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+fit <- tbats(x, model=tbats)
+fcmat[i,] <- forecast(fit, h=h)$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+# cross validation with re-estimation
+for (i in 1:5)
+{
+x <- window(y, start=c(i,1), end=c(i+11,168))
+fit <- tbats(x)
+fcmat[i,] <- forecast(fit, h=h)$mean
+accuracy[i,] <- accuracy(fcmat[i,], window(y, start=c(i+12,1), end=c(i+12,168)))
+}
+accuracy
+colSums (accuracy, na.rm = FALSE, dims = 1)/5
+#================== Detecting anomalies using forecasting method ==================#
+# 1. Moomba Festival
+# Calendar view
+ts_2019 %>% filter(month(Date, label = TRUE)=="Feb" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2019 %>% filter(month(Date, label = TRUE)=="Mar" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2019 %>% filter(month(Date, label = TRUE)=="Jan" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2019 %>% filter(month(Date, label = TRUE)=="Feb" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2019 %>% filter(month(Date, label = TRUE)=="Mar" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+# Data
+train_moomba <- ts_2019 %>%
+filter(Sensor == c('Flinders Street Station Underpass', 'Princes Bridge') &
+Date_Time>=as.POSIXlt("2019-02-04 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2019-03-03 23:00", tz="Australia/Melbourne"))
+test_moomba <- ts_2019 %>%
+filter(Sensor == c('Flinders Street Station Underpass', 'Princes Bridge') &
+Date_Time>=as.POSIXlt("2019-03-04 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2019-03-10 23:00", tz="Australia/Melbourne"))
+# Moomba <- ts_2019 %>%
+# filter(Sensor == c('Flinders Street Station Underpass', 'Princes Bridge') &
+# Date_Time>=as.POSIXlt("2019-03-08 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2019-03-11 23:00", tz="Australia/Melbourne"))
+# Time Series Plots
+train_moomba %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +
+ggtitle("Pedestrian Counts Daily Patterns") +
+facet_grid(Sensor ~ .)
+test_moomba %>%
+mutate(
+Day = lubridate::wday(Date, label = TRUE),
+Weekend = (Day %in% c("Sun", "Sat"))
+) %>%
+ggplot(aes(x = Time, y = Count, group = Date)) +
+geom_line(aes(col = Weekend)) +
+ggtitle("Pedestrian Counts Daily Patterns") +
+facet_grid(Sensor ~ .)
+# Forecasting
+# DATA
+train_moomba_pb <- ts_2019 %>% filter(Sensor == 'Princes Bridge' &
+Date_Time>=as.POSIXlt("2019-02-05 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2019-03-04 23:00", tz="Australia/Melbourne"))
+test_moomba_pb <- ts_2019 %>% filter(Sensor == 'Princes Bridge' &
+Date_Time>=as.POSIXlt("2019-03-05 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2019-03-11 23:00", tz="Australia/Melbourne"))
+x <- msts(train_moomba_pb$Count, seasonal.periods=c(24,24*7))
+# xreg <- fourier(x, K=c(12,12))
+testts_moomba_pb <- msts(test_moomba_pb[,5], seasonal.periods=c(24,24*7), start=c(5,1))
+# Refit
+fit_moomba <- tbats(x, model=tbats)
+fc_moomba <- forecast(fit_moomba, h=168)
+fc_moomba$mean
+fc_moomba %>% autoplot() + ylab("Counts") + xlab("Time") + autolayer(testts_moomba_pb, series = "Test data")
+checkresiduals(fc_moomba)
+# Forecasting Errors
+fc_moomba_mean <- fc_moomba$mean %>% as_tsibble(index = time) %>% mutate(Date_Time = test_moomba_pb$Date_Time)
+fc_moomba_mean <- fc_moomba_mean %>% as_tsibble(index = Date_Time)
+error_moomba <- test_moomba_pb$Count - fc_moomba_mean$value
+error_moomba <- error_moomba %>% as_tibble() %>% mutate(Date_Time = test_moomba_pb$Date_Time)
+error_moomba <- error_moomba %>% as_tsibble(index = Date_Time)
+error_moomba %>% ggplot() +
+geom_line(aes(x = Date_Time, y = value)) +
+ggtitle(label = "Forecast Error of Moomba Festival")
+# 2. Christmas and New Year
+ts_2018 %>% filter(month(Date, label = TRUE)=="Oct" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Nov" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Dec" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+# DATA
+train_xmas_flinders <- ts_2018 %>% filter(Sensor == 'Flinders Street Station Underpass' &
+Date_Time>=as.POSIXlt("2018-11-26 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-12-23 23:00", tz="Australia/Melbourne"))
+test_xmas_flinders <- ts_2018 %>% filter(Sensor == 'Flinders Street Station Underpass' &
+Date_Time>=as.POSIXlt("2018-12-24 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-12-30 23:00", tz="Australia/Melbourne"))
+# compare with previous week of xmas
+xmas_flinders <- ts_2018 %>% filter(Sensor == 'Flinders Street Station Underpass' &
+Date_Time>=as.POSIXlt("2018-11-12 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-12-30 23:00", tz="Australia/Melbourne"))
+drop_rows <- xmas_flinders %>% filter(Date_Time>=as.POSIXlt("2018-11-19 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-11-25 23:00", tz="Australia/Melbourne"))
+xmas_flinders <- setdiff(xmas_flinders,drop_rows)
+# x <- msts(train_xmas_flinders$Count, seasonal.periods=c(24,24*7))
+# testts_xmas_flinders <- msts(test_xmas_flinders[,5], seasonal.periods=c(24,24*7), start=c(5,1))
+x <- msts(xmas_flinders$Count, seasonal.periods=c(24,24*7))
+# Refit
+x_train1 <- window(x, start=c(1,1), end=c(4,168))
+x_test1 <- window(x, start=c(5,1), end=c(5,168))
+x_train2 <- window(x, start=c(2,1), end=c(5,168))
+x_test2 <- window(x, start=c(6,1), end=c(6,168))
+fit_xmas1 <- tbats(x_train1) #model=tbats
+fc_xmas1 <- forecast(fit_xmas1, h=168)
+fc_xmas1$mean
+fc_xmas1 %>% autoplot() + ylab("Counts") + xlab("Time") + autolayer(x_test1, series = "Test data")
+fit_xmas2 <- tbats(x_train2)
+fc_xmas2 <- forecast(fit_xmas2, h=168)
+fc_xmas2$mean
+fc_xmas2 %>% autoplot() + ylab("Counts") + xlab("Time") + autolayer(x_test2, series = "Test data")
+# Forecasting Errors
+Date_Time = xmas_flinders %>% filter(
+Date_Time>=as.POSIXlt("2018-12-17 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-12-30 23:00", tz="Australia/Melbourne"))
+Date_Time = Date_Time$Date_Time
+error_xmas1 <- x_test1 - fc_xmas1$mean
+error_xmas1 <- error_xmas1 %>% as_tibble()
+error_xmas2 <- x_test2 - fc_xmas2$mean
+error_xmas2 <- error_xmas2 %>% as_tibble()
+error_xmas <- full_join(error_xmas1,error_xmas2)
+error_xmas <- error_xmas %>% as_tibble() %>% mutate(Date_Time = Date_Time)
+error_xmas <- error_xmas %>% as_tsibble(index = Date_Time)
+error_xmas %>% ggplot() +
+geom_line(aes(x = Date_Time, y = x)) +
+ggtitle(label = "Forecast Error of Christmas Holiday")
+save.image(file="Final_Code.RData")
+load(file="Final_Code.RData")
