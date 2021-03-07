@@ -1,0 +1,98 @@
+# ========================= Use Composits Package in R ================= #
+# devtools::install_github("business-science/anomalize")
+install.packages("anomalize")
+library(ggplot2)
+library(forecast)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(rgdal)
+library(tidyverse)
+library(tibbletime)
+library(anomalize)
+# 1. Moomba Festival
+# Data used in forecasting models
+# train_moomba <- ts_2019 %>%
+# filter(Sensor == c('Flinders Street Station Underpass', 'Princes Bridge') &
+# Date_Time>=as.POSIXlt("2019-02-04 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2019-03-03 23:00", tz="Australia/Melbourne"))
+# test_moomba <- ts_2019 %>%
+# filter(Sensor == c('Flinders Street Station Underpass', 'Princes Bridge') &
+# Date_Time>=as.POSIXlt("2019-03-04 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2019-03-10 23:00", tz="Australia/Melbourne"))
+# Data for anomoly detection
+Moomba_pb <- ts_2019 %>% filter(Sensor == 'Princes Bridge')
+Moomba_pb <- Moomba_pb %>% filter(Date_Time>=as.POSIXlt("2019-02-04 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2019-03-17 23:00", tz="Australia/Melbourne"))
+# Princes Bridge
+# ----- Anomaly detection using anomalize ------#
+Moomba_pb_1 <- Moomba_pb[, c(2,5)]
+# Change the time scale template
+get_time_scale_template()
+# time_scale_template() %>%
+# mutate(trend = ifelse(time_scale == "hour", "2 week", trend)) %>%
+# set_time_scale_template()
+time_scale_template() %>%
+mutate(frequency = ifelse(time_scale == "hour", "4 week", trend)) %>%
+set_time_scale_template()
+# STL decomposition method #
+p1 <- Moomba_pb_1 %>%
+time_decompose(Count) %>%
+anomalize(remainder) %>%
+plot_anomaly_decomposition() +
+ggtitle("Anomaly Detection Using Anomalize")
+p1
+# Twitter decomposition method #
+p1.1 <- Moomba_pb_1 %>%
+time_decompose(Count, method = "twitter") %>%
+anomalize(remainder) %>%
+plot_anomaly_decomposition() +
+ggtitle("Anomaly Detection Using Anomalize")
+p1.1
+# 2. Christmas and New Year
+ts_2018 %>% filter(month(Date, label = TRUE)=="Oct" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Nov" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Dec" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2019 %>% filter(month(Date, label = TRUE)=="Jan" & Sensor =='Flinders Street Station Underpass') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Nov" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+ts_2018 %>% filter(month(Date, label = TRUE)=="Dec" & Sensor =='Princes Bridge') %>%
+ggplot(aes(x = Time, y = Count)) + geom_line() + facet_calendar(Date)
+# DATA
+# train_xmas_flinders <- ts_2018 %>% filter(Sensor == 'Flinders Street Station Underpass' &
+# Date_Time>=as.POSIXlt("2018-11-26 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2018-12-23 23:00", tz="Australia/Melbourne"))
+# test_xmas_flinders <- ts_2018 %>% filter(Sensor == 'Flinders Street Station Underpass' &
+# Date_Time>=as.POSIXlt("2018-12-24 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2018-12-30 23:00", tz="Australia/Melbourne"))
+# compare with previous week of xmas
+xmas_flinders <- ts_2018 %>% filter(Sensor == 'Flinders Street Station Underpass' &
+Date_Time>=as.POSIXlt("2018-11-26 00:00", tz="Australia/Melbourne") &
+Date_Time<=as.POSIXlt("2018-12-30 23:00", tz="Australia/Melbourne"))
+# drop_rows <- xmas_flinders %>% filter(Date_Time>=as.POSIXlt("2018-11-19 00:00", tz="Australia/Melbourne") &
+# Date_Time<=as.POSIXlt("2018-11-25 23:00", tz="Australia/Melbourne"))
+#xmas_flinders <- setdiff(xmas_flinders,drop_rows)
+# Anomaly detection
+# ------- use anomalize ------ #
+xmas_flinders <- xmas_flinders[, c(2,5)]
+time_scale_template() %>%
+mutate(frequency = ifelse(time_scale == "hour", "1 week", trend)) %>%
+set_time_scale_template()
+p2 <- xmas_flinders %>%
+time_decompose(Count) %>%
+anomalize(remainder) %>%
+plot_anomaly_decomposition() +
+ggtitle("Anomaly Detection Using Anomalize")
+p2
+# Twitter decomposition method #
+p2.1 <- xmas_flinders %>%
+time_decompose(Count, method = "twitter") %>%
+anomalize(remainder) %>%
+plot_anomaly_decomposition() +
+ggtitle("Anomaly Detection Using Anomalize")
+p2.1
+save.image(file="Anomoly Detection.RData")
